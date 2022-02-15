@@ -1,0 +1,169 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class InputHandler : MonoBehaviour
+{
+    public string attackInput = "";
+    bool isFacingRight = true;
+    bool timerStart;
+
+    public float inputClearTimerVal;
+    float inputClearTimer;
+
+    public List<KeyCode> Inputs = new List<KeyCode>();
+    // Start is called before the first frame update
+    void Start()
+    {
+        inputClearTimer = inputClearTimerVal;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        checkForInput();
+        checkForRelease();
+
+        if(timerStart && inputClearTimer > 0)
+        {
+            inputClearTimer -= Time.deltaTime;
+        }
+
+        if(inputClearTimer <= 0)
+        {
+            attackInput = "";
+            Inputs.Clear();
+        }
+
+        
+    }
+
+
+    public void checkForInput()
+    {
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            
+            
+            attackInput = attackInput + "Down";
+            Inputs.Add(KeyCode.S);
+        }
+
+        if (Input.GetKey(KeyCode.S))
+        {
+            if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
+            {
+                if (Input.GetKeyDown(KeyCode.A))
+                {
+                    if (isFacingRight)
+                    {
+                        attackInput = attackInput + "BackDiag";
+
+                    }
+                    else
+                    {
+                        attackInput = attackInput + "ForwardDiag";
+                    }
+
+                    Inputs.Add(KeyCode.A);
+                }
+                else if (Input.GetKeyDown(KeyCode.D))
+                {
+                    if (isFacingRight)
+                    {
+                        attackInput = attackInput + "ForwardDiag";
+                    }
+                    else
+                    {
+                        attackInput = attackInput + "BackDiag";
+                    }
+
+                    Inputs.Add(KeyCode.D);
+                }
+            }
+        }
+        else
+        {
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                if (isFacingRight)
+                {
+                    attackInput = attackInput + "Forward";
+                }
+                else
+                {
+                    attackInput = attackInput + "Back";
+                }
+                Inputs.Add(KeyCode.D);
+            }
+
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                if (isFacingRight)
+                {
+                    attackInput = attackInput + "Back";
+                }
+                else
+                {
+                    attackInput = attackInput + "Forward";
+                }
+                Inputs.Add(KeyCode.A);
+            }
+        }
+
+        //Note: Will likely need array of keys/buttons that correspond to attack buttons
+        //Run a for loop check that determines whether or not the pressed button is an attack button. If so, then
+        //Trigger attack
+
+        if (!Input.anyKey)
+        {
+            timerStart = true;
+        }
+        else
+        {
+            timerStart = false;
+            inputClearTimer = inputClearTimerVal;
+        }
+    }
+
+    public void checkForRelease()
+    {
+        foreach(KeyCode kCode in Inputs)
+        {
+            if (Input.GetKeyUp(kCode))
+            {
+                if(kCode == KeyCode.S)
+                {
+                    if(Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+                    {
+                        if (Input.GetKey(KeyCode.A))
+                        {
+                            if (isFacingRight)
+                            {
+                                attackInput = attackInput + "Back";
+                            }
+                            else
+                            {
+                                attackInput = attackInput + "Forward";
+                            }
+                        } else if (Input.GetKey(KeyCode.D))
+                        {
+                            if (isFacingRight)
+                            {
+                                attackInput = attackInput + "Forward";
+                            }
+                            else
+                            {
+                                attackInput = attackInput + "Back";
+                            }
+                        }
+                    }
+                }
+                else
+                {
+
+                }
+            }
+        }
+    }
+}
