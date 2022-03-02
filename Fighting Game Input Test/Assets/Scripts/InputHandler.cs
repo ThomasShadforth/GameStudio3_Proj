@@ -5,7 +5,8 @@ using UnityEngine;
 public class InputHandler : MonoBehaviour
 {
     public string attackInput = "";
-    bool isFacingRight = true;
+    [SerializeField] bool isFacingRight = true;
+    [SerializeField] bool isAttacking;
     bool timerStart;
 
     public float inputClearTimerVal;
@@ -21,8 +22,11 @@ public class InputHandler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        checkForInput();
-        checkForRelease();
+        if (!isAttacking)
+        {
+            checkForInput();
+            checkForRelease();
+        }
 
         if(timerStart && inputClearTimer > 0)
         {
@@ -41,12 +45,14 @@ public class InputHandler : MonoBehaviour
 
     public void checkForInput()
     {
-        if (Input.GetKeyDown(KeyCode.S))
+        if (!Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.A))
         {
-            
-            
-            attackInput = attackInput + "Down";
-            Inputs.Add(KeyCode.S);
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+
+                attackInput = attackInput + "Down";
+                Inputs.Add(KeyCode.S);
+            }
         }
 
         if (Input.GetKey(KeyCode.S))
@@ -95,6 +101,24 @@ public class InputHandler : MonoBehaviour
                     attackInput = attackInput + "Back";
                 }
                 Inputs.Add(KeyCode.D);
+
+                
+            }
+
+            if (Input.GetKey(KeyCode.D))
+            {
+                if (Input.GetKeyDown(KeyCode.S))
+                {
+                    Debug.Log("AAAAA");
+                    if (isFacingRight)
+                    {
+                        attackInput = attackInput + "ForwardDiag";
+                    }
+                    else
+                    {
+                        attackInput = attackInput + "BackDiag";
+                    }
+                }
             }
 
             if (Input.GetKeyDown(KeyCode.A))
@@ -108,6 +132,24 @@ public class InputHandler : MonoBehaviour
                     attackInput = attackInput + "Forward";
                 }
                 Inputs.Add(KeyCode.A);
+
+                
+            }
+            if (Input.GetKey(KeyCode.A))
+            {
+               
+                if (Input.GetKeyDown(KeyCode.S))
+                {
+                    
+                    if (isFacingRight)
+                    {
+                        attackInput = attackInput + "BackDiag";
+                    }
+                    else
+                    {
+                        attackInput = attackInput + "ForwardDiag";
+                    }
+                }
             }
         }
 
@@ -134,8 +176,10 @@ public class InputHandler : MonoBehaviour
             {
                 if(kCode == KeyCode.S)
                 {
+                    
                     if(Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
                     {
+                        
                         if (Input.GetKey(KeyCode.A))
                         {
                             if (isFacingRight)
@@ -161,7 +205,13 @@ public class InputHandler : MonoBehaviour
                 }
                 else
                 {
-
+                    if(kCode == KeyCode.A || kCode == KeyCode.D)
+                    {
+                        if (Input.GetKey(KeyCode.S))
+                        {
+                            attackInput = attackInput + "Down";
+                        }
+                    }
                 }
             }
         }
