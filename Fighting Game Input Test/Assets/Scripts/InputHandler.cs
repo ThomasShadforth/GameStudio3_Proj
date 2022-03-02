@@ -5,7 +5,7 @@ using UnityEngine;
 public class InputHandler : MonoBehaviour
 {
     public string attackInput = "";
-    [SerializeField] bool isFacingRight = true;
+    public bool isFacingRight = true;
     [SerializeField] bool isAttacking;
     bool timerStart;
 
