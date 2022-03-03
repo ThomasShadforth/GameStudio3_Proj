@@ -12,11 +12,14 @@ public class InputHandler : MonoBehaviour
     public float inputClearTimerVal;
     float inputClearTimer;
 
+    PlayerCharacter player;
+
     public List<KeyCode> Inputs = new List<KeyCode>();
     // Start is called before the first frame update
     void Start()
     {
         inputClearTimer = inputClearTimerVal;
+        player = GetComponent<PlayerCharacter>();
     }
 
     // Update is called once per frame
@@ -57,6 +60,7 @@ public class InputHandler : MonoBehaviour
 
         if (Input.GetKey(KeyCode.S))
         {
+            player.isCrouching = true;
             if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
             {
                 if (Input.GetKeyDown(KeyCode.A))
@@ -176,7 +180,8 @@ public class InputHandler : MonoBehaviour
             {
                 if(kCode == KeyCode.S)
                 {
-                    
+                    player.isCrouching = false;
+                    player.setHighJumpTimer();
                     if(Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
                     {
                         
