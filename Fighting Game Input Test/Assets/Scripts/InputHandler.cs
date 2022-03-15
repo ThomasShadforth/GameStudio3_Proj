@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class InputHandler : MonoBehaviour
 {
+    [Header("Input string record")]
     public string attackInput = "";
+    [Header("Facing Right, is attacking, etc.")]
     public bool isFacingRight = true;
     [SerializeField] bool isAttacking;
     bool timerStart;
@@ -14,7 +16,9 @@ public class InputHandler : MonoBehaviour
 
     PlayerCharacter player;
 
+    [Header ("Inputs - Tracking, Attack Buttons, etc.")]
     public List<KeyCode> Inputs = new List<KeyCode>();
+    public List<KeyCode> AttackButtons = new List<KeyCode>();
     // Start is called before the first frame update
     void Start()
     {
@@ -29,6 +33,7 @@ public class InputHandler : MonoBehaviour
         {
             checkForInput();
             checkForRelease();
+            checkForAttackInput();
         }
 
         if(timerStart && inputClearTimer > 0)
@@ -218,6 +223,17 @@ public class InputHandler : MonoBehaviour
                         }
                     }
                 }
+            }
+        }
+    }
+
+    public void checkForAttackInput()
+    {
+        foreach(KeyCode attackButton in AttackButtons)
+        {
+            if (Input.GetKeyDown(attackButton))
+            {
+                Debug.Log("ATTACK!");
             }
         }
     }

@@ -57,7 +57,14 @@ public class PlayerCharacter : MonoBehaviour
             checkForDashInput();
         }
 
-        checkForJumpInput();
+        if (!isDashingBack)
+        {
+            checkForJumpInput();
+        }
+
+        //For now, have this method called here
+        //Eventually, the player will track the opponent's position on the X-Axis so that it faces them when it's on one side or the other
+        checkForDirectionChange();
     }
 
     private void FixedUpdate()
@@ -201,7 +208,7 @@ public class PlayerCharacter : MonoBehaviour
         isDashingBack = true;
         rb.velocity = new Vector2(rb.velocity.x, 0f);
 
-        rb.AddForce(new Vector2(dashDistance * transform.localScale.x * -1, 0f), ForceMode2D.Impulse);
+        rb.AddForce(new Vector2(dashDistance * (transform.localScale.x * -1), 0f), ForceMode2D.Impulse);
 
         yield return new WaitForSeconds(.3f);
         rb.velocity = new Vector2(0, 0);
@@ -270,6 +277,12 @@ public class PlayerCharacter : MonoBehaviour
 
     #endregion
 
+    #region Utility Methods
+    void checkForDirectionChange()
+    {
+
+    }
+    #endregion
     private void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(feetPos.position, feetRadius);
