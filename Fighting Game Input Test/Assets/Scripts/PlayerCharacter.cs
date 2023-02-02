@@ -1,15 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerCharacter : MonoBehaviour
 {
     //Basic Movement
     Vector3 move;
     Rigidbody2D rb;
-    InputHandler characterInput;
+    public InputHandler characterInput;
     [Header("Movement")]
     public float forwardMovSpeed, backwardMovSpeed;
+
+    //Health Values
+    [Header("Health Values - Max, current, etc.")]
+    public float maxHealth;
+    public float currentHealth;
 
     //Jump Values
     [Header("Jump Values (Height, number, etc)")]
@@ -29,11 +35,31 @@ public class PlayerCharacter : MonoBehaviour
     //Dash Values
     [Header("Dash Values - Boolean Checks, distance, move speed, etc.")]
     public bool isDashingBack;
+    public bool isAirDashing;
     public bool isDashingForward;
     public float doubleTapTime;
+    public int airDashCount;
+    public int airDashVal;
+    public float airDashDistance;
     public float dashDistance;
     public float dashMoveSpeed;
     KeyCode lastKeyCode;
+
+    [Header("Meter Values - Meter cap, current meter, deplete rate, etc.")]
+    public float maxMeter;
+    public float currentMeter;
+    public float meterDepleteRate;
+    public float meterMoveMultiplier = 1;
+
+    public bool isAttacking;
+
+    public float knockbackForce;
+    public float knockbackTimer;
+    float knockbackTime;
+
+    Animator animator;
+
+    Transform targetOpponent;
 
     // Start is called before the first frame update
     void Start()
@@ -41,18 +67,31 @@ public class PlayerCharacter : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         characterInput = GetComponent<InputHandler>();
         doubleJumpHeight = normalJumpHeight / 1.3f;
-        
+        animator = GetComponent<Animator>();
+        targetOpponent = FindObjectOfType<EnemyCharacter>().transform;
+        airDashCount = airDashVal;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (characterInput.isAttacking)
+        {
+            return;
+        }
+
+        if(knockbackTime > 0)
+        {
+            knockbackTime -= Time.deltaTime;
+            return;
+        }
+
         if (!isJumping && !isDashingBack)
         {
             checkForMoveInput();
         }
 
-        if (!isDashingBack)
+        if (!isDashingBack && !isAirDashing)
         {
             checkForDashInput();
         }
@@ -61,6 +100,8 @@ public class PlayerCharacter : MonoBehaviour
         {
             checkForJumpInput();
         }
+
+        checkForMeterThreshold();
 
         //For now, have this method called here
         //Eventually, the player will track the opponent's position on the X-Axis so that it faces them when it's on one side or the other
@@ -89,11 +130,10 @@ public class PlayerCharacter : MonoBehaviour
             moveSpeed = dashMoveSpeed;
         }
 
+        animator.SetFloat("MoveX", Mathf.Abs(move.x));
+        rb.velocity = new Vector2(move.x * moveSpeed * meterMoveMultiplier, rb.velocity.y);
 
-
-        rb.velocity = new Vector2(move.x * moveSpeed, rb.velocity.y);
-
-        
+        currentMeter -= (1 * Mathf.Abs(move.x) * meterDepleteRate) * Time.deltaTime;
     }
 
     float getDirectionSpeed()
@@ -136,25 +176,40 @@ public class PlayerCharacter : MonoBehaviour
             
             if (characterInput.isFacingRight)
             {
-                if (doubleTapTime > Time.time && lastKeyCode == KeyCode.A && !isDashingBack)
+                if (isGrounded)
                 {
-                    StartCoroutine(Dash());
+                    if (doubleTapTime > Time.time && lastKeyCode == KeyCode.A && !isDashingBack)
+                    {
+                        StartCoroutine(Dash());
+                    }
+                    else
+                    {
+                        doubleTapTime = Time.time + .5f;
+                    }
                 }
                 else
                 {
-                    doubleTapTime = Time.time + .5f;
+
                 }
             }
 
             else
             {
-                if(doubleTapTime > Time.time && lastKeyCode == KeyCode.A && !isDashingForward)
+                if (isGrounded)
                 {
-                    isDashingForward = true;
+                    if (doubleTapTime > Time.time && lastKeyCode == KeyCode.A && !isDashingForward)
+                    {
+                        isDashingForward = true;
+                        animator.SetBool("isDashing", true);
+                    }
+                    else
+                    {
+                        doubleTapTime = Time.time + .5f;
+                    }
                 }
                 else
                 {
-                    doubleTapTime = Time.time + .5f;
+
                 }
             }
             lastKeyCode = KeyCode.A;
@@ -167,6 +222,7 @@ public class PlayerCharacter : MonoBehaviour
                 if (doubleTapTime > Time.time && lastKeyCode == KeyCode.D && !isDashingBack)
                 {
                     isDashingForward = true;
+                    animator.SetBool("isDashing", true);
                 }
                 else
                 {
@@ -193,12 +249,14 @@ public class PlayerCharacter : MonoBehaviour
             if (isDashingForward)
             {
                 isDashingForward = false;
+                animator.SetBool("isDashing", false);
             }
         } else if (Input.GetKeyUp(KeyCode.D))
         {
             if (isDashingForward)
             {
                 isDashingForward = false;
+                animator.SetBool("isDashing", false);
             }
         }
     }
@@ -223,6 +281,7 @@ public class PlayerCharacter : MonoBehaviour
         if(Input.GetButtonDown("Jump") && isGrounded && jumpCount == 0)
         {
             rb.velocity = Vector3.up * normalJumpHeight;
+            animator.SetBool("isJumping", true);
         }
 
         if(Input.GetButtonDown("Jump") && jumpCount > 0)
@@ -242,6 +301,7 @@ public class PlayerCharacter : MonoBehaviour
                 jumpCount--;
                 
             }
+            animator.SetBool("isJumping", true);
             isJumping = true;
         }
 
@@ -249,16 +309,18 @@ public class PlayerCharacter : MonoBehaviour
         {
             jumpCount = jumpCountVal;
             isJumping = false;
+            animator.SetBool("isJumping", false);
         }
         else
         {
             isJumping = true;
+            animator.SetBool("isJumping", true);
         }
 
         if (isCrouching)
         {
             if(highJumpTimer > 0 && Input.GetButtonDown("Jump") && jumpCount > 0){
-                Debug.Log("HIGH JUMP");
+                
                 rb.velocity = Vector3.up * (normalJumpHeight * 1.5f);
                 jumpCount--;
             }
@@ -280,9 +342,70 @@ public class PlayerCharacter : MonoBehaviour
     #region Utility Methods
     void checkForDirectionChange()
     {
+        Vector3 scalar = transform.localScale;
 
+
+        if(targetOpponent.position.x > transform.position.x)
+        {
+            characterInput.isFacingRight = true;
+            scalar.x = 1;
+            
+
+        }
+        else if(targetOpponent.position.x < transform.position.x)
+        {
+            characterInput.isFacingRight = false;
+            scalar.x = -1;
+        }
+
+        transform.localScale = scalar;
     }
+
+    void checkForMeterThreshold()
+    {
+        if(currentMeter > 75)
+        {
+            meterMoveMultiplier = 1;
+        } else if(currentMeter <= 75 && currentMeter > 50)
+        {
+            meterMoveMultiplier = .7f;
+        } else if(currentMeter <= 50 && currentMeter > 25)
+        {
+            meterMoveMultiplier = .5f;
+        }
+    }
+
     #endregion
+
+    public void TakeDamage(float damage)
+    {
+        currentHealth -= damage;
+
+        if(currentHealth <= 0)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+    }
+
+    public void ApplyKnockback(Vector3 directionOfKnock)
+    {
+        directionOfKnock *= knockbackForce;
+        knockbackTime = knockbackTimer;
+
+        StartCoroutine(knockbackCo(knockbackTime, directionOfKnock));
+    }
+
+    IEnumerator knockbackCo(float knockTime, Vector3 direction)
+    {
+        while(knockTime > 0)
+        {
+            rb.AddForce(new Vector2(direction.x, direction.y), ForceMode2D.Impulse);
+            knockTime -= Time.deltaTime;
+        }
+
+        yield return null;
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(feetPos.position, feetRadius);

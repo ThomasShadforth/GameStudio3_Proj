@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,17 +9,24 @@ public class InputHandler : MonoBehaviour
     public string attackInput = "";
     [Header("Facing Right, is attacking, etc.")]
     public bool isFacingRight = true;
-    [SerializeField] bool isAttacking;
+    public bool isAttacking;
     bool timerStart;
 
     public float inputClearTimerVal;
     float inputClearTimer;
 
     PlayerCharacter player;
+    [SerializeField] AttackRenderer attackRenderer; 
+
 
     [Header ("Inputs - Tracking, Attack Buttons, etc.")]
     public List<KeyCode> Inputs = new List<KeyCode>();
     public List<KeyCode> AttackButtons = new List<KeyCode>();
+
+    [SerializeField] readonly string[] attackCommands = { "Light", "Medium", "Down,ForwardDiag,Forward,Light", "Down,BackDiag,Back,Light", "Down,ForwardDiag,Forward,Medium", "Down,BackDiag,Back,Medium", "Down,ForwardDiag,Forward,Heavy", "Down,BackDiag,Back,Heavy", "Down,Light", "Down,Medium", "Down,Heavy"};
+
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -58,7 +66,7 @@ public class InputHandler : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.S))
             {
 
-                attackInput = attackInput + "Down";
+                attackInput = attackInput + "Down,";
                 Inputs.Add(KeyCode.S);
             }
         }
@@ -72,12 +80,12 @@ public class InputHandler : MonoBehaviour
                 {
                     if (isFacingRight)
                     {
-                        attackInput = attackInput + "BackDiag";
+                        attackInput = attackInput + "BackDiag,";
 
                     }
                     else
                     {
-                        attackInput = attackInput + "ForwardDiag";
+                        attackInput = attackInput + "ForwardDiag,";
                     }
 
                     Inputs.Add(KeyCode.A);
@@ -86,11 +94,11 @@ public class InputHandler : MonoBehaviour
                 {
                     if (isFacingRight)
                     {
-                        attackInput = attackInput + "ForwardDiag";
+                        attackInput = attackInput + "ForwardDiag,";
                     }
                     else
                     {
-                        attackInput = attackInput + "BackDiag";
+                        attackInput = attackInput + "BackDiag,";
                     }
 
                     Inputs.Add(KeyCode.D);
@@ -103,11 +111,11 @@ public class InputHandler : MonoBehaviour
             {
                 if (isFacingRight)
                 {
-                    attackInput = attackInput + "Forward";
+                    attackInput = attackInput + "Forward,";
                 }
                 else
                 {
-                    attackInput = attackInput + "Back";
+                    attackInput = attackInput + "Back,";
                 }
                 Inputs.Add(KeyCode.D);
 
@@ -121,11 +129,11 @@ public class InputHandler : MonoBehaviour
                     Debug.Log("AAAAA");
                     if (isFacingRight)
                     {
-                        attackInput = attackInput + "ForwardDiag";
+                        attackInput = attackInput + "ForwardDiag,";
                     }
                     else
                     {
-                        attackInput = attackInput + "BackDiag";
+                        attackInput = attackInput + "BackDiag,";
                     }
                 }
             }
@@ -134,11 +142,11 @@ public class InputHandler : MonoBehaviour
             {
                 if (isFacingRight)
                 {
-                    attackInput = attackInput + "Back";
+                    attackInput = attackInput + "Back,";
                 }
                 else
                 {
-                    attackInput = attackInput + "Forward";
+                    attackInput = attackInput + "Forward,";
                 }
                 Inputs.Add(KeyCode.A);
 
@@ -152,11 +160,11 @@ public class InputHandler : MonoBehaviour
                     
                     if (isFacingRight)
                     {
-                        attackInput = attackInput + "BackDiag";
+                        attackInput = attackInput + "BackDiag,";
                     }
                     else
                     {
-                        attackInput = attackInput + "ForwardDiag";
+                        attackInput = attackInput + "ForwardDiag,";
                     }
                 }
             }
@@ -194,21 +202,21 @@ public class InputHandler : MonoBehaviour
                         {
                             if (isFacingRight)
                             {
-                                attackInput = attackInput + "Back";
+                                attackInput = attackInput + "Back,";
                             }
                             else
                             {
-                                attackInput = attackInput + "Forward";
+                                attackInput = attackInput + "Forward,";
                             }
                         } else if (Input.GetKey(KeyCode.D))
                         {
                             if (isFacingRight)
                             {
-                                attackInput = attackInput + "Forward";
+                                attackInput = attackInput + "Forward,";
                             }
                             else
                             {
-                                attackInput = attackInput + "Back";
+                                attackInput = attackInput + "Back,";
                             }
                         }
                     }
@@ -233,7 +241,46 @@ public class InputHandler : MonoBehaviour
         {
             if (Input.GetKeyDown(attackButton))
             {
-                Debug.Log("ATTACK!");
+                
+                switch (attackButton)
+                {
+                    case KeyCode.O:
+                        attackInput += "Medium";
+                        break;
+                    case KeyCode.P:
+                        attackInput += "Heavy";
+                        break;
+                    case KeyCode.K:
+                        attackInput += "Light";
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        triggerAttack();
+    }
+
+    private void triggerAttack()
+    {
+        foreach(string command in attackCommands)
+        {
+            if(attackInput == command)
+            {
+                if (attackInput.Contains("Light"))
+                {
+                    attackRenderer.checkForAttack(attackInput, "Light");
+                } else if (attackInput.Contains("Medium"))
+                {
+                    attackRenderer.checkForAttack(attackInput, "Medium");
+                } else if (attackInput.Contains("Heavy"))
+                {
+                    attackRenderer.checkForAttack(attackInput, "Heavy");
+                }
+                isAttacking = true;
+                player.isAttacking = true;
+                attackInput = "";
             }
         }
     }
